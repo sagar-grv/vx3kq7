@@ -83,7 +83,7 @@ data/wind.db             Bundled SQLite dataset (see Data). Rebuild with the ing
 
 ## How to start
 
-### With Docker (image build not yet verified)
+### With Docker
 
 The brief asks for a Docker deliverable, so a multi-stage Dockerfile and a compose
 wrapper are included:
@@ -96,11 +96,7 @@ docker run -p 8000:8000 windsight
 
 or `docker compose up --build`.
 
-**Verification status: the image itself has NOT been built or run** - the build
-environment had no Docker daemon. Every step in the Dockerfile was replicated and
-verified manually instead (clean `npm install && npm run build`, clean venv from
-`requirements.txt`, the entrypoint's env var handling, and every API endpoint against
-the served static bundle), so the recipe is exercised but `docker build` is untested.
+**Verification status: verified by CI.** The `docker-verify` GitHub Actions workflow (`.github/workflows/docker-verify.yml`) builds this image on every push, runs the backend pytest suite inside the container, and smoke-tests the served endpoints (`/api/meta` and `/`). Latest run on `main`: passing (repo Actions tab). During development the image steps were also replicated and verified manually (clean `npm install && npm run build`, clean venv from `requirements.txt`, entrypoint env handling, and every API endpoint against the served static bundle).
 
 The bundled database is included in the image. If it is deleted, the container
 re-ingests January 2026 from Elexon on startup (requires outbound network).
@@ -129,12 +125,9 @@ Tests: `cd backend && PYTHONPATH=. python -m pytest tests/ -q`
 
 ## Deployed app
 
-Planned deployment: Vercel free tier - static frontend plus the FastAPI app as a
-serverless function (`api/index.py` + `vercel.json` are already in the repo; the
-serverless entry point is import-tested but not yet deployed). The Docker route above
-is the alternative once the image build is verified.
+Live deployment (Vercel free tier): static frontend build plus the FastAPI app as a serverless function (`api/index.py` + `vercel.json`). The production deployment is verified live: the app loads and `/api/meta` serves the bundled January 2026 dataset.
 
-Deployed URL: **APP_URL_PLACEHOLDER** (deployment pending)
+Deployed URL: **https://vx3kq7.vercel.app**
 
 ## AI usage disclosure
 
