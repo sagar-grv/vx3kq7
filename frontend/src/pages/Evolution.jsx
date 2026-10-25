@@ -77,8 +77,8 @@ export default function Evolution() {
                 <YAxis stroke="#8fa1c4" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} domain={['auto', 'auto']} />
                 <Tooltip formatter={(v, name) => [name === 'Actual' ? `${Number(v).toLocaleString()} MW` : `${Number(v).toLocaleString()} MW`, name]} />
                 <Legend />
-                <Line type="monotone" dataKey="generation" name="Forecast at publish time" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="actual" name="Actual" stroke="#34d399" strokeWidth={2} strokeDasharray="6 3" dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="generation" name="Forecast at publish time" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line isAnimationActive={false} type="monotone" dataKey="actual" name="Actual" stroke="#34d399" strokeWidth={2} strokeDasharray="6 3" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>

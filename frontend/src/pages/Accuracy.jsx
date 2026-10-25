@@ -42,8 +42,8 @@ export default function Accuracy() {
                 <YAxis stroke="#8fa1c4" />
                 <Tooltip formatter={(v, name) => [`${Number(v).toLocaleString()} MW`, name]} />
                 <Legend />
-                <Bar dataKey="mae" name="MAE" fill="#60a5fa" />
-                <Bar dataKey="rmse" name="RMSE" fill="#a78bfa" />
+                <Bar isAnimationActive={false} dataKey="mae" name="MAE" fill="#60a5fa" />
+                <Bar isAnimationActive={false} dataKey="rmse" name="RMSE" fill="#a78bfa" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -58,8 +58,8 @@ export default function Accuracy() {
                 <YAxis stroke="#8fa1c4" />
                 <Tooltip formatter={(v, name) => [name === 'mape' ? v + ' %' : `${Number(v).toLocaleString()} MW`, name]} />
                 <Legend />
-                <Line type="monotone" dataKey="mae" name="MAE" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="rmse" name="RMSE" stroke="#a78bfa" strokeWidth={2} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="mae" name="MAE" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 2 }} />
+                <Line isAnimationActive={false} type="monotone" dataKey="rmse" name="RMSE" stroke="#a78bfa" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -75,7 +75,7 @@ export default function Accuracy() {
               <XAxis dataKey="label" stroke="#8fa1c4" tick={{ fontSize: 10 }} interval={1} />
               <YAxis stroke="#8fa1c4" />
               <Tooltip />
-              <Bar dataKey="count" name="Hours" fill="#34d399" />
+              <Bar isAnimationActive={false} dataKey="count" name="Hours" fill="#34d399" />
               <ReferenceLine x={dist.bins.findIndex((b) => 0 >= b.from && 0 < b.to)} stroke="#f87171" />
             </BarChart>
           </ResponsiveContainer>

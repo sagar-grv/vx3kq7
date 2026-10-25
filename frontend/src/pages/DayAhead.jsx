@@ -76,10 +76,10 @@ export default function DayAhead() {
                 <YAxis stroke="#8fa1c4" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v, name) => [`${Number(v).toLocaleString()} MW`, name]} />
                 <Legend />
-                <Line type="monotone" dataKey="actual" name="Actual (FUELHH)" stroke="#34d399" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="forecast" name="Latest day-ahead forecast (WINDFOR)" stroke="#60a5fa" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="band_high" name="P90 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
-                <Line type="monotone" dataKey="band_low" name="P10 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="actual" name="Actual (FUELHH)" stroke="#34d399" strokeWidth={2.5} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="forecast" name="Latest day-ahead forecast (WINDFOR)" stroke="#60a5fa" strokeWidth={2.5} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="band_high" name="P90 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="band_low" name="P10 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
                 <ReferenceLine y={0} stroke="#2a3550" />
               </ComposedChart>
             </ResponsiveContainer>
