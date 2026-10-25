@@ -8,7 +8,7 @@ jobs:
       - name: Build image
         run: docker build -t windsight .
       - name: Run tests in container
-        run: docker run --rm --entrypoint sh windsight -c "cd /app/backend && PYTHONPATH=. python -m pytest tests/ -q"
+        run: docker run --rm --entrypoint sh windsight -c "cd /app/backend && PYTHONPATH=. pip install -q pytest && python -m pytest tests/ -q"
       - name: Smoke test endpoints
         run: |
           docker run -d --name ws -p 8000:8000 windsight
