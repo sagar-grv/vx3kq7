@@ -12,30 +12,37 @@ Show the app header. Say:
 "This is WindSight, the pilot we built for your day-ahead purchasing desk. Every day your team
 decides how much power to buy beyond what the wind fleet will deliver - and that decision is
 only as good as the wind forecast behind it. WindSight puts the latest forecast in front of you
-at decision time, and tells you exactly how much you can trust it."
+at decision time, and quantifies how accurate those forecasts have actually been."
 
 **Shot 2 (0:30-1:50) - Day-Ahead Desk**
 Open Day-Ahead Desk, delivery day 2026-01-15, cutoff 23:00. Say:
 "Here is your decision view. Pick the delivery day and your decision cutoff - this shows the
 latest forecast Elexon had published by that cutoff, nothing you couldn't have seen, plotted
 against what the fleet actually generated. For the 15th of January, the day-ahead forecast was
-284.9 GWh against 253.6 GWh actual: a +31.3 GWh over-forecast. If you had procured against the
-raw forecast, you would have over-bought by roughly that amount. The dashed band is the
-empirical P10-P90 error range for forecasts at this horizon, calibrated only on the prior
-fourteen days - so it uses nothing the desk would not have had at decision time. The table below is the hourly detail behind the chart."
+284.9 GWh against 253.6 GWh actual: a +31.3 GWh over-forecast. Under a simple fixed-demand
+assumption - buying residual volume equal to demand minus forecast wind - procuring against
+the raw forecast would have left the desk roughly 31 GWh short on the day, to be covered in
+the balancing market. We deliberately don't put a pound figure on that: demand and price data
+are outside this pilot's dataset. The dashed band is the empirical P10-P90 error range for
+forecasts at this horizon, calibrated only on the prior fourteen days and only on hours whose
+actuals were also published by the cutoff - so it uses nothing the desk would not have had at
+decision time. The table below is the hourly detail behind the chart."
 
 **Shot 3 (1:50-3:00) - Accuracy Analytics**
 Switch to Accuracy Analytics. Say:
-"How much can you trust the forecast in general? We scored every forecast version issued for
+"How accurate is the forecast in general? We scored every forecast version issued for
 January delivery - over fourteen thousand - against final actuals. This is a retrospective full-month calibration. Mean absolute
 error is about 2.1 GW per hour, MAPE about 21 percent pointwise, and there is a systematic
 bias of about +1.7 GW:
 the forecast over-predicts wind on average. Error grows with horizon, as you'd expect, which is
 exactly why the day-ahead cutoff matters. The daily view shows which delivery days were hard -
-and the distribution shows eighty percent of day-ahead hourly forecasts land inside this band,
-And for the single latest forecast you would actually
-have used at an 11pm cutoff the night before, the MAE is about 1.9 GW - that is the number to
-size your purchase margin on."
+and the distribution shows about eighty percent of January's day-ahead hourly errors falling
+between the P10 and P90 quantiles - that is by construction of a P10-P90 range, so read it as
+a description of this month, not a validated coverage guarantee. And for the single latest
+forecast you would actually have used at an 11pm cutoff the night before, the MAE is about
+1.9 GW - that is the accuracy the desk would actually have experienced. It is a descriptive
+measure, not a procurement margin rule: sizing a margin would need demand and price data we
+don't model here."
 
 **Shot 4 (3:00-4:00) - Forecast Evolution**
 Switch to Forecast Evolution, 2026-01-15 18:00. Say:
@@ -46,8 +53,9 @@ forecast at your cutoff - and why we quantify the rest."
 
 **Shot 5 (4:00-4:30) - Close**
 Back to Day-Ahead Desk. Say:
-"Everything you see is computed live from Elexon's national wind actuals and forecasts, and
-nothing else - no synthetic data. The natural next step for production is wiring in your demand
+"Everything you see is computed by the app's analytics code from a bundled snapshot of
+Elexon's national wind actuals and forecasts for January 2026, pulled from Elexon's API at
+ingest time - no synthetic data. The natural next step for production is wiring in your demand
 forecast and market prices so the error band becomes a procurement recommendation in megawatts
 and pounds. Happy to walk your team through it."
 
@@ -57,8 +65,11 @@ and pounds. Happy to walk your team through it."
 Show README file tree in the repo. Say:
 "Two-tier app: a React front end, a Python FastAPI back end, and SQLite for storage. One
 Dockerfile builds the front end with a Node stage and serves the static bundle from FastAPI,
-so the whole app ships as a single container - the same artifact runs locally, on Heroku, or
-any container host. Docker Compose is included as a convenience wrapper."
+so the whole app can ship as a single container. Full disclosure: the build environment had no
+Docker daemon, so the image build itself is not yet verified - every step in the Dockerfile
+was replicated and tested manually instead. The deployment route for the pilot is Vercel:
+static front end plus the FastAPI app as a serverless function, and the config is already in
+the repo. Docker Compose is included as a convenience wrapper."
 
 **Shot 2 (0:45-1:50) - Data pipeline**
 Show backend/app/ingest.py. Say:
@@ -74,11 +85,13 @@ point re-ingests from Elexon."
 Show backend/app/analytics.py. Say:
 "Forecasts are hourly; actuals are half-hourly, so we align on whole hours, UTC - January has
 no DST complications. Error is forecast minus actual, so a positive error is an over-forecast
-and an over-procurement risk. Horizon is publish-to-delivery time, bucketed zero to six,
+which, under the fixed-demand assumption, is an under-procurement or shortfall risk for the
+desk. Horizon is publish-to-delivery time, bucketed zero to six,
 six to twelve, and so on. The day-ahead view is a point-in-time join: for each delivery hour,
 the latest version published at or before the decision cutoff - no lookahead, which matters
 because it means the accuracy figures are what a desk would actually have experienced. Error
-bands are empirical P10-P90 quantiles per horizon bucket."
+bands are empirical P10-P90 quantiles per horizon bucket, calibrated on the trailing fourteen
+days before the cutoff and only on hours whose actuals were also available by then."
 
 **Shot 4 (2:50-3:50) - API + front end**
 Show backend/app/main.py, then frontend/src/pages/DayAhead.jsx. Say:
@@ -93,8 +106,8 @@ Show tests and Dockerfile. Say:
 - re-ingestion upserts, so it's safe to re-run. Configuration is by environment variables:
 port, database path, front-end directory. Known limits: SQLite fits a one-month pilot but a
 production build would move to Postgres; horizon bucketing is hourly, matching the forecast
-resolution; and the app is read-only by design - no write surface to secure for a pilot.
-Happy to take questions on any part of the code."
+resolution; and the app is read-only by design, which keeps the pilot simple. Happy to take
+questions on any part of the code."
 
 ## Pre-upload checklist
 - [ ] Video unlisted, max 10:00 total; Part 1 and Part 2 each start with an overview <= 5:00

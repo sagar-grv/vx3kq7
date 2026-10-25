@@ -81,7 +81,7 @@ export default function Accuracy() {
       {dist && (
         <div className="panel">
           <h3>Day-ahead error distribution (forecasts 12-36 h ahead, n={dist.n.toLocaleString()})</h3>
-          <p className="explainer">P10 = {dist.p10?.toLocaleString()} MW, P90 = +{dist.p90?.toLocaleString()} MW. 80% of day-ahead hourly forecasts land inside this band.</p>
+          <p className="explainer">P10 = {dist.p10?.toLocaleString()} MW, P90 = +{dist.p90?.toLocaleString()} MW. These are retrospective sample quantiles - by construction about 80% of January's day-ahead hourly errors fell between them. This describes the sample; it is not a validated coverage guarantee for future forecasts.</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={dist.bins.map((b) => ({ ...b, label: `${(b.from / 1000).toFixed(1)}k..${(b.to / 1000).toFixed(1)}k` }))} margin={{ top: 10, right: 24, bottom: 10, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a3550" />

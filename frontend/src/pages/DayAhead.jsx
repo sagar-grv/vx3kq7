@@ -63,7 +63,7 @@ export default function DayAhead() {
             <StatCard
               label="Day-ahead energy error"
               value={(data.totals.energy_error_mwh > 0 ? '+' : '') + fmtGWh(data.totals.energy_error_mwh)}
-              hint="positive = over-forecast = over-procurement risk"
+              hint="positive = over-forecast; with fixed demand, buying residual = demand minus forecast, this means under-procurement (shortfall risk)"
             />
             <StatCard label="MAE" value={data.totals.mae + ' MW'} hint={`${data.totals.n} hourly points`} />
             <StatCard label="MAPE" value={data.totals.mape + '%'} hint="mean |error|/actual per hour" />

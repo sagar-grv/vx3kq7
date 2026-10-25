@@ -43,7 +43,7 @@ export default function Evolution() {
         <h2>Forecast evolution</h2>
         <p className="explainer">
           Every forecast version Elexon published for one delivery hour, in publish order, against the final actual.
-          Shows how the forecast converges as delivery approaches - and how much trust to place in early versions.
+          Shows how forecast error shrinks as delivery approaches - evidence for anchoring decisions to the latest version at the cutoff.
         </p>
         <div className="control-row">
           <label>

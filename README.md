@@ -8,6 +8,11 @@ wind fleet will generate. WindSight answers the two questions that decision depe
    The Day-Ahead Desk view shows, for any January 2026 delivery day, exactly the forecast
    versions the desk could see at a configurable D-1 decision cutoff, next to what the
    wind fleet actually generated - with an empirical P10-P90 error band per horizon.
+   The band is calibrated strictly without lookahead: only the trailing 14 days of
+   forecast/actual pairs where BOTH the forecast and the actual were available by the
+   cutoff (actuals assumed published within 2 h of each hour's end; configurable via
+   CAL_ACTUAL_LAG_HOURS). With fewer than 30 usable pairs (CAL_BAND_MIN_PAIRS) the desk
+   shows a "limited history" notice instead of a band - never a full-month fallback.
 2. **How accurate are those forecasts, quantitatively?**
    The Accuracy Analytics view scores every forecast version issued for January 2026
    delivery hours against the final actuals: MAE / RMSE / bias / MAPE overall and by
@@ -36,6 +41,12 @@ embedded generation is out of scope, exactly as the brief specifies (Elexon data
 
 Dataset bundled in `data/wind.db`: 1,488 actual half-hours and 18,104 forecast versions
 (published 2025-12-30 to 2026-02-01) covering delivery hours 2026-01-01 to 2026-01-31 (UTC).
+
+Interpretation caveat: the app quantifies forecast error only. Under a simple
+fixed-demand assumption (buy residual = demand minus forecast wind), a positive error
+- an over-forecast - means the desk would have bought too little residual power
+(shortfall exposure); a negative error means surplus. No financial impact is claimed:
+demand volumes and market prices are outside the dataset.
 
 Method: forecasts (hourly) are aligned with actuals (mean of the two half-hour settlement
 periods in each hour, UTC). Error = forecast - actual (positive = over-forecast).
@@ -72,7 +83,10 @@ data/wind.db             Bundled SQLite dataset (see Data). Rebuild with the ing
 
 ## How to start
 
-### With Docker (recommended)
+### With Docker (image build not yet verified)
+
+The brief asks for a Docker deliverable, so a multi-stage Dockerfile and a compose
+wrapper are included:
 
 ```sh
 docker build -t windsight .
@@ -81,6 +95,12 @@ docker run -p 8000:8000 windsight
 ```
 
 or `docker compose up --build`.
+
+**Verification status: the image itself has NOT been built or run** - the build
+environment had no Docker daemon. Every step in the Dockerfile was replicated and
+verified manually instead (clean `npm install && npm run build`, clean venv from
+`requirements.txt`, the entrypoint's env var handling, and every API endpoint against
+the served static bundle), so the recipe is exercised but `docker build` is untested.
 
 The bundled database is included in the image. If it is deleted, the container
 re-ingests January 2026 from Elexon on startup (requires outbound network).
@@ -109,11 +129,21 @@ Tests: `cd backend && PYTHONPATH=. python -m pytest tests/ -q`
 
 ## Deployed app
 
-The app is deployed as a single container (see Dockerfile) at: **APP_URL_PLACEHOLDER**
+Planned deployment: Vercel free tier - static frontend plus the FastAPI app as a
+serverless function (`api/index.py` + `vercel.json` are already in the repo; the
+serverless entry point is import-tested but not yet deployed). The Docker route above
+is the alternative once the image build is verified.
+
+Deployed URL: **APP_URL_PLACEHOLDER** (deployment pending)
 
 ## AI usage disclosure
 
-AI coding assistance was used to build this application (scaffolding, boilerplate,
-chart configuration, and documentation drafting), as permitted by the challenge brief.
-All data shown is fetched from the Elexon BMRS Insights API and computed by the code in
-this repository; no results are hand-written.
+Per the challenge brief's permission to use AI tools with disclosure: this application
+was built with extensive AI coding assistance throughout - project scaffolding, the
+analytics implementation, the test suite, debugging, the data ingestion work, and the
+documentation. The author directed the work and set the requirements.
+
+Independently of how the code was produced: all data shown is fetched from the Elexon
+BMRS Insights API and computed by the code in this repository; no results are
+hand-written or invented. Every headline figure can be reproduced by running the tests
+and the audit script (`backend/audit.py`) against the bundled dataset.
