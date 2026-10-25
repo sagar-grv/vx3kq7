@@ -1,0 +1,17 @@
+name: docker-verify
+on: [push]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t windsight .
+      - name: Run tests in container
+        run: docker run --rm --entrypoint sh windsight -c "cd /app/backend && PYTHONPATH=. python -m pytest tests/ -q"
+      - name: Smoke test endpoints
+        run: |
+          docker run -d --name ws -p 8000:8000 windsight
+          sleep 8
+          curl -fsS http://localhost:8000/api/meta
+          curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8000/
