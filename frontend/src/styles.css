@@ -31,3 +31,4 @@ th { color: #64748b; font-weight: 600; position: sticky; top: 0; background: #11
 tr.bad td { color: #fca5a5; }
 .error { color: #fca5a5; }
 .foot { color: #475569; font-size: 12px; margin-top: 26px; text-align: center; }
+.bandnote { font-size: 12px; color: #fbbf24; border-color: #57430f; }

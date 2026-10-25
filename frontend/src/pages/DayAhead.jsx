@@ -69,6 +69,13 @@ export default function DayAhead() {
             <StatCard label="MAPE" value={data.totals.mape + '%'} hint="mean |error|/actual per hour" />
             <StatCard label="nMAE (WAPE)" value={data.totals.nmae + '%'} hint="MAE / mean actual" />
           </div>
+          {data.band && (
+            <div className="panel bandnote">
+              {data.band.limited_history
+                ? `Error band unavailable for this day - only ${data.band.pairs} usable prior pairs at this cutoff (early January has little prior history). Never substituted with full-month lookahead data.`
+                : `Band calibration: ${data.band.pairs.toLocaleString()} usable pairs from the prior ${data.band.days} days (actuals assumed published within ${data.band.actual_lag_hours} h of each hour's end).`}
+            </div>
+          )}
           <div className="panel">
             <ResponsiveContainer width="100%" height={380}>
               <ComposedChart data={rows} margin={{ top: 10, right: 24, bottom: 10, left: 0 }}>

@@ -27,6 +27,13 @@ for delivery days in **January 2026**:
   publish version retained
   (https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream)
 
+Coverage basis (verified against Elexon/NESO documentation): FUELHH outturn comes from
+Operational Metering of transmission-system BMUs; Elexon notes renewables outturn excludes
+embedded and operationally unmetered wind farms (NESO estimates roughly 82% coverage as of
+2025). NESO describes its wind forecast as the "operational metered wind forecast", the same
+metering basis, so forecast and actual are compared like-for-like. Total GB wind including
+embedded generation is out of scope, exactly as the brief specifies (Elexon data only).
+
 Dataset bundled in `data/wind.db`: 1,488 actual half-hours and 18,104 forecast versions
 (published 2025-12-30 to 2026-02-01) covering delivery hours 2026-01-01 to 2026-01-31 (UTC).
 

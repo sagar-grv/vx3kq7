@@ -14,6 +14,8 @@ from typing import Iterable, Optional
 
 MAPE_MIN_ACTUAL_MW = 100.0  # exclude near-zero-wind hours from MAPE
 BAND_CALIBRATION_DAYS = 14  # trailing window for the day-ahead error band (no lookahead)
+BAND_MIN_PAIRS = 30  # below this the band is reported as limited-history, never full-month fallback
+CAL_ACTUAL_LAG_HOURS = 2  # assumption: FUELHH outturn for an hour is published within 2h of its end
 
 HORIZON_BUCKETS = [
     (0, 6, "0-6 h"),
@@ -132,7 +134,7 @@ def latest_forecasts_before(conn, cutoff: dt.datetime) -> dict[str, dict]:
     return {r["start_time"]: {"publish_time": r["publish_time"], "generation": r["generation"]} for r in rows}
 
 
-def day_ahead_points(conn, date: dt.date, cutoff_hhmm: str) -> list[dict]:
+def day_ahead_points(conn, date: dt.date, cutoff_hhmm: str) -> list[dict]:  # noqa: C901
     """For delivery day `date`, the forecast the desk would see at the D-1 cutoff, vs actuals."""
     hh, mm = (int(x) for x in cutoff_hhmm.split(":"))
     cutoff = dt.datetime.combine(date - dt.timedelta(days=1), dt.time(hh, mm, tzinfo=dt.timezone.utc))
@@ -142,21 +144,33 @@ def day_ahead_points(conn, date: dt.date, cutoff_hhmm: str) -> list[dict]:
     # forecast versions published in the trailing BAND_CALIBRATION_DAYS days before
     # the cutoff, scored against their (already known) actuals. No lookahead.
     cal_lo = cutoff - dt.timedelta(days=BAND_CALIBRATION_DAYS)
+    # No-lookahead rule: a calibration pair is usable at the cutoff only if BOTH the
+    # forecast was published before the cutoff AND its target hour's actual outturn
+    # would already be published (start_time + CAL_ACTUAL_LAG_HOURS <= cutoff).
     cal_rows = conn.execute(
         "SELECT start_time, publish_time, generation FROM forecasts"
         " WHERE publish_time >= ? AND publish_time <= ?",
         (iso(cal_lo), iso(cutoff)),
     ).fetchall()
     cal_errs: dict[str, list[float]] = {label: [] for _, _, label in HORIZON_BUCKETS}
+    lag = dt.timedelta(hours=CAL_ACTUAL_LAG_HOURS)
     for r in cal_rows:
+        st = parse(r["start_time"])
+        if st + lag > cutoff:
+            continue  # actual outturn not yet published at decision time
         hour = r["start_time"][:13]
         if hour not in actuals:
             continue
-        horizon = (parse(r["start_time"]) - parse(r["publish_time"])).total_seconds() / 3600.0
+        horizon = (st - parse(r["publish_time"])).total_seconds() / 3600.0
         if horizon < 0:
             continue
         cal_errs[bucket_for(horizon)].append(r["generation"] - actuals[hour])
-    bands = {label: quantiles(errs, (0.1, 0.9)) for label, errs in cal_errs.items()}
+    n_cal = sum(len(v) for v in cal_errs.values())
+    bands = {
+        label: (quantiles(errs, (0.1, 0.9)) if len(errs) >= BAND_MIN_PAIRS else (None, None))
+        for label, errs in cal_errs.items()
+    }
+    day_ahead_points.last_calibration = {"pairs": n_cal, "days": BAND_CALIBRATION_DAYS, "actual_lag_hours": CAL_ACTUAL_LAG_HOURS, "min_pairs": BAND_MIN_PAIRS}
     points = []
     for hour in range(24):
         st = dt.datetime.combine(date, dt.time(hour, tzinfo=dt.timezone.utc))

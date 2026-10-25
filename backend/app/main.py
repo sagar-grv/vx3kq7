@@ -82,8 +82,14 @@ def day_ahead(date: str = Query(...), cutoff: str = Query("23:00")):
         "date": date,
         "cutoff_utc": f"{(d - dt.timedelta(days=1)).isoformat()}T{cutoff}:00Z",
         "band": {
-            "calibration": f"P10-P90 of forecast errors published in the {analytics.BAND_CALIBRATION_DAYS} days before the cutoff, same horizon bucket. Uses only information available at decision time (no lookahead).",
+            "calibration": (
+                f"P10-P90 of errors for forecasts published in the {analytics.BAND_CALIBRATION_DAYS} days before "
+                f"the cutoff, same horizon bucket, counting only target hours whose actual outturn was already "
+                f"published by the cutoff (assumed lag {analytics.CAL_ACTUAL_LAG_HOURS} h). No lookahead."
+            ),
             "days": analytics.BAND_CALIBRATION_DAYS,
+            **analytics.day_ahead_points.last_calibration,
+            "limited_history": analytics.day_ahead_points.last_calibration["pairs"] < analytics.BAND_MIN_PAIRS,
         },
         "points": points,
         "totals": {
