@@ -106,8 +106,10 @@ Show tests and Dockerfile. Say:
 - re-ingestion upserts, so it's safe to re-run. Configuration is by environment variables:
 port, database path, front-end directory. Known limits: SQLite fits a one-month pilot but a
 production build would move to Postgres; horizon bucketing is hourly, matching the forecast
-resolution; and the app is read-only by design, which keeps the pilot simple. Happy to take
-questions on any part of the code."
+resolution; and the app is read-only by design, which keeps the pilot simple. One disclosure,
+per the brief's AI policy: this build used extensive AI coding assistance throughout -
+implementation, tests, debugging, data work, and documentation - and that is stated plainly in
+the README. Happy to take questions on any part of the code."
 
 ## Pre-upload checklist
 - [ ] Video unlisted, max 10:00 total; Part 1 and Part 2 each start with an overview <= 5:00
