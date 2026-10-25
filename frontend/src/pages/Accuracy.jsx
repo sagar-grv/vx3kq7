@@ -20,7 +20,7 @@ export default function Accuracy() {
         <h2>Forecast accuracy - quantified</h2>
         <p className="explainer">
           Every January 2026 forecast version scored against the final actual, by forecast horizon.
-          Use this to size the error margin on a day-ahead purchase: error = forecast - actual (positive = over-forecast).
+          Error = forecast - actual (positive = over-forecast). This page is a retrospective full-month analysis - calibration insight, not data available at decision time. The Day-Ahead Desk band uses only the prior 14 days.
         </p>
       </div>
       {summary && (
@@ -28,7 +28,20 @@ export default function Accuracy() {
           <StatCard label="Overall MAE" value={summary.overall.mae + ' MW'} hint={`${summary.overall.n.toLocaleString()} forecast versions`} />
           <StatCard label="Overall RMSE" value={summary.overall.rmse + ' MW'} />
           <StatCard label="Bias" value={(summary.overall.bias > 0 ? '+' : '') + summary.overall.bias + ' MW'} hint="positive = systematic over-forecast" />
-          <StatCard label="Overall MAPE" value={summary.overall.mape + '%'} />
+          <StatCard label="Overall MAPE" value={summary.overall.mape + '%'} hint="mean |error|/actual per hour" />
+          <StatCard label="Overall nMAE (WAPE)" value={summary.overall.nmae + '%'} hint="MAE / mean actual" />
+        </div>
+      )}
+      {summary && summary.decision_set && (
+        <div className="panel">
+          <h3>Day-ahead decision set - the forecast a desk would actually have used</h3>
+          <p className="explainer">{summary.decision_set.description}</p>
+          <div className="stats">
+            <StatCard label="Decision-set MAE" value={summary.decision_set.mae + ' MW'} hint={`${summary.decision_set.n} delivery hours`} />
+            <StatCard label="Decision-set RMSE" value={summary.decision_set.rmse + ' MW'} />
+            <StatCard label="Decision-set bias" value={(summary.decision_set.bias > 0 ? '+' : '') + summary.decision_set.bias + ' MW'} />
+            <StatCard label="Decision-set MAPE" value={summary.decision_set.mape + '%'} />
+          </div>
         </div>
       )}
       <div className="grid2">

@@ -20,9 +20,11 @@ wind fleet will generate. WindSight answers the two questions that decision depe
 Only Elexon national wind data is used, and only data relevant to purchase decisions
 for delivery days in **January 2026**:
 
-- Actuals: BMRS Insights `FUELHH` dataset, `fuelType=WIND`, half-hourly
+- Actuals: BMRS Insights `FUELHH` dataset - half-hourly generation outturn by fuel type
+  for Great Britain; we use `fuelType=WIND`, average MW per 30-minute settlement period
   (https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream)
-- Forecasts: BMRS Insights `WINDFOR` dataset, hourly, every publish version retained
+- Forecasts: BMRS Insights `WINDFOR` dataset - wind generation forecast, hourly, every
+  publish version retained
   (https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream)
 
 Dataset bundled in `data/wind.db`: 1,488 actual half-hours and 18,104 forecast versions
@@ -31,6 +33,10 @@ Dataset bundled in `data/wind.db`: 1,488 actual half-hours and 18,104 forecast v
 Method: forecasts (hourly) are aligned with actuals (mean of the two half-hour settlement
 periods in each hour, UTC). Error = forecast - actual (positive = over-forecast).
 Horizon = hours between forecast publish time and delivery start time.
+Metrics: MAPE is the pointwise mean |error|/actual (hours under 100 MW actual excluded);
+nMAE/WAPE is MAE / mean actual. The Day-Ahead Desk P10-P90 band is calibrated only on
+forecast versions published in the 14 days before the chosen cutoff (no lookahead);
+the Accuracy Analytics page is a retrospective full-month analysis.
 
 ## Files and directories
 

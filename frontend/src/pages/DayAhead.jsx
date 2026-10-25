@@ -36,8 +36,8 @@ export default function DayAhead() {
         <h2>Day-ahead purchase desk</h2>
         <p className="explainer">
           The wind forecast your desk would actually have seen at the decision cutoff on the day before delivery,
-          plotted against what the wind fleet really generated. The dashed band is the empirical P10-P90 error
-          range for forecasts at that horizon, learned from January 2026.
+          plotted against what the wind fleet really generated. The dashed band is the empirical P10-P90 error range
+          for forecasts at that horizon, calibrated only on the 14 days before the cutoff - no lookahead.
         </p>
         <div className="control-row">
           <label>
@@ -66,7 +66,8 @@ export default function DayAhead() {
               hint="positive = over-forecast = over-procurement risk"
             />
             <StatCard label="MAE" value={data.totals.mae + ' MW'} hint={`${data.totals.n} hourly points`} />
-            <StatCard label="MAPE" value={data.totals.mape + '%'} hint="MAE / mean actual" />
+            <StatCard label="MAPE" value={data.totals.mape + '%'} hint="mean |error|/actual per hour" />
+            <StatCard label="nMAE (WAPE)" value={data.totals.nmae + '%'} hint="MAE / mean actual" />
           </div>
           <div className="panel">
             <ResponsiveContainer width="100%" height={380}>
@@ -78,8 +79,8 @@ export default function DayAhead() {
                 <Legend />
                 <Line isAnimationActive={false} type="monotone" dataKey="actual" name="Actual (FUELHH)" stroke="#34d399" strokeWidth={2.5} dot={false} />
                 <Line isAnimationActive={false} type="monotone" dataKey="forecast" name="Latest day-ahead forecast (WINDFOR)" stroke="#60a5fa" strokeWidth={2.5} dot={false} />
-                <Line isAnimationActive={false} type="monotone" dataKey="band_high" name="P90 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
-                <Line isAnimationActive={false} type="monotone" dataKey="band_low" name="P10 error band" stroke="#64748b" strokeDasharray="4 4" dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="band_high" name="P90 band (prior 14 days)" stroke="#64748b" strokeDasharray="4 4" dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="band_low" name="P10 band (prior 14 days)" stroke="#64748b" strokeDasharray="4 4" dot={false} />
                 <ReferenceLine y={0} stroke="#2a3550" />
               </ComposedChart>
             </ResponsiveContainer>

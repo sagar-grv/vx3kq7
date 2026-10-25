@@ -12,6 +12,9 @@ import math
 import statistics
 from typing import Iterable, Optional
 
+MAPE_MIN_ACTUAL_MW = 100.0  # exclude near-zero-wind hours from MAPE
+BAND_CALIBRATION_DAYS = 14  # trailing window for the day-ahead error band (no lookahead)
+
 HORIZON_BUCKETS = [
     (0, 6, "0-6 h"),
     (6, 12, "6-12 h"),
@@ -75,18 +78,31 @@ def error_pairs(conn) -> list[dict]:
 
 
 def metrics(errors: Iterable[float], actuals: Optional[Iterable[float]] = None) -> dict:
+    """Error metrics. MAPE is the true pointwise mean |error|/|actual| (hours with
+    actual <= MAPE_MIN_ACTUAL_MW excluded). NMAE is the volume-weighted variant
+    (MAE / mean actual, a.k.a. WAPE)."""
     errs = list(errors)
     if not errs:
-        return {"n": 0, "mae": None, "rmse": None, "bias": None, "mape": None}
+        return {"n": 0, "mae": None, "rmse": None, "bias": None, "mape": None, "nmae": None}
     mae = sum(abs(e) for e in errs) / len(errs)
     rmse = math.sqrt(sum(e * e for e in errs) / len(errs))
     bias = sum(errs) / len(errs)
     mape = None
+    nmae = None
     if actuals is not None:
-        acts = [a for a in actuals if a and a > 0]
-        if acts:
-            mape = 100.0 * mae / (sum(acts) / len(acts))
-    return {"n": len(errs), "mae": round(mae, 1), "rmse": round(rmse, 1), "bias": round(bias, 1), "mape": round(mape, 2) if mape is not None else None}
+        acts = list(actuals)
+        pos = [(e, a) for e, a in zip(errs, acts) if a and a >= MAPE_MIN_ACTUAL_MW]
+        if pos:
+            mape = 100.0 * sum(abs(e) / a for e, a in pos) / len(pos)
+            nmae = 100.0 * mae / (sum(a for _, a in pos) / len(pos))
+    return {
+        "n": len(errs),
+        "mae": round(mae, 1),
+        "rmse": round(rmse, 1),
+        "bias": round(bias, 1),
+        "mape": round(mape, 2) if mape is not None else None,
+        "nmae": round(nmae, 2) if nmae is not None else None,
+    }
 
 
 def by_horizon(pairs: list[dict]) -> list[dict]:
@@ -122,12 +138,25 @@ def day_ahead_points(conn, date: dt.date, cutoff_hhmm: str) -> list[dict]:
     cutoff = dt.datetime.combine(date - dt.timedelta(days=1), dt.time(hh, mm, tzinfo=dt.timezone.utc))
     latest = latest_forecasts_before(conn, cutoff)
     actuals = hourly_actuals(conn)
-    # Empirical error band per horizon bucket across the whole dataset
-    pairs = error_pairs(conn)
-    bands = {}
-    for _, _, label in HORIZON_BUCKETS:
-        errs = [p["error"] for p in pairs if p["bucket"] == label]
-        bands[label] = quantiles(errs, (0.1, 0.9))
+    # Error band calibrated ONLY on information available at the decision cutoff:
+    # forecast versions published in the trailing BAND_CALIBRATION_DAYS days before
+    # the cutoff, scored against their (already known) actuals. No lookahead.
+    cal_lo = cutoff - dt.timedelta(days=BAND_CALIBRATION_DAYS)
+    cal_rows = conn.execute(
+        "SELECT start_time, publish_time, generation FROM forecasts"
+        " WHERE publish_time >= ? AND publish_time <= ?",
+        (iso(cal_lo), iso(cutoff)),
+    ).fetchall()
+    cal_errs: dict[str, list[float]] = {label: [] for _, _, label in HORIZON_BUCKETS}
+    for r in cal_rows:
+        hour = r["start_time"][:13]
+        if hour not in actuals:
+            continue
+        horizon = (parse(r["start_time"]) - parse(r["publish_time"])).total_seconds() / 3600.0
+        if horizon < 0:
+            continue
+        cal_errs[bucket_for(horizon)].append(r["generation"] - actuals[hour])
+    bands = {label: quantiles(errs, (0.1, 0.9)) for label, errs in cal_errs.items()}
     points = []
     for hour in range(24):
         st = dt.datetime.combine(date, dt.time(hour, tzinfo=dt.timezone.utc))

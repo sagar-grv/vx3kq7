@@ -24,7 +24,7 @@ def meta():
     ).fetchone()
     return {
         "product": "WindSight",
-        "scope": "UK national wind (Elexon FUELHH actuals, WINDFOR forecasts). Delivery days: January 2026.",
+        "scope": "GB wind (Elexon FUELHH half-hourly generation outturn, fuelType=WIND; WINDFOR wind generation forecast). Delivery days: January 2026.",
         "actuals": {"from": a["lo"], "to": a["hi"], "records": a["n"]},
         "forecasts": {"from": f["lo"], "to": f["hi"], "published_from": f["plo"], "published_to": f["phi"], "records": f["n"]},
     }
@@ -38,11 +38,28 @@ def days():
 
 
 @app.get("/api/summary")
-def summary():
+def summary(cutoff: str = Query("23:00")):
+    """Retrospective accuracy over the full month (all forecast versions), plus the
+    day-ahead decision set: the single latest forecast at the D-1 cutoff per hour."""
     conn = get_conn()
     pairs = analytics.error_pairs(conn)
     overall = analytics.metrics([p["error"] for p in pairs], [p["actual"] for p in pairs])
-    return {"overall": overall, "by_horizon": analytics.by_horizon(pairs)}
+    days_rows = conn.execute("SELECT DISTINCT substr(start_time, 1, 10) AS d FROM actuals ORDER BY d").fetchall()
+    decision = []
+    for r in days_rows:
+        for pt in analytics.day_ahead_points(conn, dt.date.fromisoformat(r["d"]), cutoff):
+            if pt["error"] is not None:
+                decision.append(pt)
+    decision_metrics = analytics.metrics([p["error"] for p in decision], [p["actual"] for p in decision])
+    return {
+        "overall": overall,
+        "by_horizon": analytics.by_horizon(pairs),
+        "decision_set": {
+            "description": f"Only the single latest forecast per delivery hour as of the D-1 {cutoff} UTC cutoff - the version a desk would actually have used.",
+            "cutoff": cutoff,
+            **decision_metrics,
+        },
+    }
 
 
 @app.get("/api/day-ahead")
@@ -64,6 +81,10 @@ def day_ahead(date: str = Query(...), cutoff: str = Query("23:00")):
     return {
         "date": date,
         "cutoff_utc": f"{(d - dt.timedelta(days=1)).isoformat()}T{cutoff}:00Z",
+        "band": {
+            "calibration": f"P10-P90 of forecast errors published in the {analytics.BAND_CALIBRATION_DAYS} days before the cutoff, same horizon bucket. Uses only information available at decision time (no lookahead).",
+            "days": analytics.BAND_CALIBRATION_DAYS,
+        },
         "points": points,
         "totals": {
             "forecast_mwh": round(forecast_mwh, 0),

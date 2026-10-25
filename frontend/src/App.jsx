@@ -19,7 +19,7 @@ export default function App() {
       <header className="topbar">
         <div>
           <h1>WindSight</h1>
-          <p className="subtitle">Day-ahead UK wind forecast intelligence - pilot build (Elexon FUELHH / WINDFOR, delivery days: January 2026)</p>
+          <p className="subtitle">Day-ahead GB wind forecast intelligence - pilot build (Elexon FUELHH / WINDFOR, delivery days: January 2026)</p>
         </div>
         {meta && (
           <div className="meta">
@@ -41,7 +41,7 @@ export default function App() {
         {tab === 'accuracy' && <Accuracy />}
       </main>
       <footer className="foot">
-        Data: Elexon BMRS Insights (FUELHH actual generation, WINDFOR national wind forecast). All times UTC. MW unless noted.
+        Data: Elexon BMRS Insights - FUELHH half-hourly generation outturn for Great Britain (fuelType=WIND) and WINDFOR wind generation forecast. All times UTC. MW unless noted.
       </footer>
     </div>
   )

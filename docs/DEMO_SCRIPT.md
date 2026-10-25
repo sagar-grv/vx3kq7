@@ -21,18 +21,21 @@ latest forecast Elexon had published by that cutoff, nothing you couldn't have s
 against what the fleet actually generated. For the 15th of January, the day-ahead forecast was
 284.9 GWh against 253.6 GWh actual: a +31.3 GWh over-forecast. If you had procured against the
 raw forecast, you would have over-bought by roughly that amount. The dashed band is the
-empirical P10-P90 error range for forecasts at this horizon, learned from all of January - so
-you buy against a range, not a point. The table below is the hourly detail behind the chart."
+empirical P10-P90 error range for forecasts at this horizon, calibrated only on the prior
+fourteen days - so it uses nothing the desk would not have had at decision time. The table below is the hourly detail behind the chart."
 
 **Shot 3 (1:50-3:00) - Accuracy Analytics**
 Switch to Accuracy Analytics. Say:
 "How much can you trust the forecast in general? We scored every forecast version issued for
-January delivery - over fourteen thousand - against final actuals. Mean absolute error is
-about 2.1 GW per hour, MAPE about 18 percent, and there is a systematic bias of about +1.7 GW:
+January delivery - over fourteen thousand - against final actuals. This is a retrospective full-month calibration. Mean absolute
+error is about 2.1 GW per hour, MAPE about 21 percent pointwise, and there is a systematic
+bias of about +1.7 GW:
 the forecast over-predicts wind on average. Error grows with horizon, as you'd expect, which is
 exactly why the day-ahead cutoff matters. The daily view shows which delivery days were hard -
 and the distribution shows eighty percent of day-ahead hourly forecasts land inside this band,
-which is the band you saw on the desk view."
+And for the single latest forecast you would actually
+have used at an 11pm cutoff the night before, the MAE is about 1.9 GW - that is the number to
+size your purchase margin on."
 
 **Shot 4 (3:00-4:00) - Forecast Evolution**
 Switch to Forecast Evolution, 2026-01-15 18:00. Say:
